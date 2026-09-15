@@ -1,98 +1,83 @@
-# TASK: Replace ONLY the DoCLASSE FV mannequin
-
-## Published preview
+# TASK: Replace ONLY the existing FV mannequin, retaining the original interaction
 
 - Demo: https://159265moneys.github.io/doclasse-fv-mannequin/
-- Public repository: https://github.com/159265moneys/doclasse-fv-mannequin
-- ZIP: https://github.com/159265moneys/doclasse-fv-mannequin/releases/latest/download/doclasse-fv-mannequin.zip
+- Public repo: https://github.com/159265moneys/doclasse-fv-mannequin
+- Latest ZIP: https://github.com/159265moneys/doclasse-fv-mannequin/releases/latest/download/doclasse-fv-mannequin.zip
+- Reference deployment: https://915hirata.pages.dev/
 
-## User-approved scope
+## Mandatory scope
 
-The user approved the visual direction in this package. Integrate the supplied Blender/Cycles mannequin into the existing DoCLASSE recruitment landing page. The reference deployment is https://915hirata.pages.dev/ . This ZIP is a component/asset patch, NOT a replacement website.
+Replace only the FV mannequin renderer. Preserve the existing hero, copy, typography, colors, navigation, CTA, routes, all other sections, Lenis, GSAP, ScrollTrigger, global pointer state and intro curtain. Do not overwrite the website with the preview HTML. Do not rebuild the model from primitives. Do not use the v1.0 static/multi-view implementation or a prerecorded movie: the user explicitly rejected those because they do not reproduce the interaction.
 
-**Do not redesign, regenerate, rewrite or replace any other part of the site.** Preserve existing copy, typography, colors, header, navigation, buttons, spacing, other sections, GSAP/scroll/entrance animations, metadata and routes. Do not copy a preview HTML file over the existing page. Do not rebuild this model from Three.js primitives. Do not ask the user to approve the already-approved visual direction again.
+## Correct behavior (verified from deployed JavaScript)
 
-## Rendering decision — preserve it
+1. `pointermove`: normalize against the browser window: `nx = clientX / innerWidth * 2 - 1`, `ny = clientY / innerHeight * 2 - 1` (Y is DOWN).
+2. Wheel input goes through the EXISTING Lenis controller (`lerp: .09`, `wheelMultiplier: .95`). It scrolls the page normally.
+3. The existing GSAP ScrollTrigger maps hero `top top` -> `bottom top` to `heroState.scroll` 0 -> 1, scrub true.
+4. `src/reference-motion.js` directly ports the original rig. Camera Z target is `5.2 - 1.4 * scroll`; pointer controls pitch/roll and camera X/Y; Y rotation independently increases by `.12 * dt`. Do not replace this with drag OrbitControls, arbitrary scroll rotation, a video, image swapping, or CSS zoom.
+5. `src/ribbon-motion.js` retains the source vertex equations, all frequencies, 2.3 turns, .085 width, time, twist and scroll-dependent loosening. No loop-frequency approximations. The final ribbon is actually deformed in 3D.
+6. The particle animation also retains the reference shader and 36 / 2.2 / .25 / .55 parameters.
+7. The real perspective camera, full 3D model and depth ordering respond together. Reduced-motion disables animation; invisible/hidden views stop drawing.
 
-- The final FV displays transparent images rendered by Blender Cycles.
-- Scanned fabric, physical stitch geometry, cloth seam deformation, wood grain, brushed brass and indirect light are baked into the images.
-- `cycles-mannequin.webp` is the initial, high-quality image.
-- `views/view-00.webp` … `view-08.webp` are 9 Cycles-rendered camera angles (1.5° intervals; centre = 04). Desktop pointer movement blends adjacent views. This is a rendered multi-view asset, not a freely rotatable WebGL scene.
-- Mobile, coarse pointers, reduced-motion and save-data use the static image.
-- Do not replace the final images with the earlier GLB/WebGL approximation. That approach was rejected by the user.
-- No external CDN, WebGL renderer or new Three.js dependency is required.
+See `MOTION_SOURCE.md` for exact provenance and the numerical comparison test.
 
-## Package
+## Assets and material quality
 
-```text
-public/mannequin/
-  cycles-mannequin.webp
-  views/view-00.webp ... view-08.webp
-  mannequin.js                    # built ES module for plain HTML integration
-  hero.css
-integration/
-  HeroMannequin.tsx                # preferred React/Next.js integration
-  mannequin.js                    # source ES module used by the component
-  mannequin.d.ts
-  hero.css
-blender/doclasse-cycles-final.blend # final source; images packed into .blend
-renders/                           # full-resolution PNGs, not needed at runtime
-CODEX_HANDOFF.md
-ASSET_MANIFEST.json
-```
+`public/mannequin/cycles-dressform.glb` is exported from the approved, detailed Blender master. Geometry includes the shaped linen body, arm bindings, seams, stitches, fibre geometry, turned walnut, hardware and brass. The body contains a 4096px Cycles diffuse bake (fabric and illumination). Wood uses separately baked color/roughness/normal maps. Brass, wood and satin use physical materials; browser display uses Three.js. This is actual interactive geometry, not realtime Cycles path tracing. The linen's baked studio illumination is attached to its surface; it is not recomputed when the model rotates.
 
-## Integrate into the real source tree
+`cycles-mannequin.webp` remains the approved high-resolution loading/error fallback. Draco decoder files and the satin normal map are local; no external CDN is needed. Preserve all these assets.
 
-1. Inspect the repository and find the existing FV mannequin component. Useful landmarks:
+## Integrate
+
+1. Find the existing FV renderer and runtime modules:
    ```sh
-   rg -n 'hero3d|heroState|LatheGeometry|DoCLASSE CAREERS|Hero3D' app src components
+   rg -n 'hero3d|heroState|runtime.pointer|onReady|Hero3D' app src components
    ```
-   The reference page has a `section.hero` containing a `.hero3d` renderer, `.hero__grain`, `.hero__inner` and `.hero__foot`. The old 3D renderer is dynamically imported with SSR disabled.
-
-2. Copy `public/mannequin/` into the existing project's public directory. Keep paths stable; the default asset base is `/mannequin`. If the deployment uses a base path, pass the correct `assetBase` into the component.
-
-3. Copy the 4 files from `integration/` together into a small component subdirectory, preserving their relative imports.
-
-4. Replace ONLY the old FV renderer's JSX with `<HeroMannequin />`. Keep the existing parent hero, all sibling elements, and their classes untouched. You may preserve the existing `dynamic(..., { ssr: false })` boundary and point it at `HeroMannequin`.
+2. Copy `public/mannequin/` as a complete directory into the target public directory. Do not copy `public/demo`, the preview HTML, or its blank scroll room into the client site.
+3. Copy ALL files in `integration/` together. Runtime dependencies: `three` 0.180.0 (the source renderer uses Three.js/addons). Reuse a compatible existing version if the target already has it; run its typecheck/build.
+4. Replace only the old renderer component/dynamic import with `HeroMannequin`. Preserve its existing SSR-disabled dynamic boundary.
+5. Connect the existing state using stable module-level functions (or useCallback). Resolve actual import paths from the target repo:
    ```tsx
-   import dynamic from 'next/dynamic';
-   const HeroMannequin = dynamic(() => import('./mannequin/HeroMannequin'), { ssr: false });
-   // Existing hero:
-   <section className="hero" /* existing props */>
-     <HeroMannequin />
-     {/* EXISTING grain/copy/CTA/footer remain exactly as they are */}
-   </section>
+   // Import heroState, runtime and onReady FROM THE EXISTING SITE MODULES.
+   const getHeroScroll = () => heroState.scroll;
+   const getHeroPointer = () => runtime.pointer;
+   // Within the existing hero, replacing only the old renderer:
+   <HeroMannequin
+     assetBase="/mannequin"
+     getScroll={getHeroScroll}
+     getPointer={getHeroPointer}
+     subscribeReady={onReady}
+   />
    ```
-   If the original component already has a stable import path, adapting/replacing its implementation while preserving that path is also fine.
+   `onReady` is the existing callback-registration function returning an unsubscribe function. It keeps the curtain/entrance timing. If the target has no such lifecycle, omit `subscribeReady` and the model begins after loading.
+6. Keep the parent ScrollTrigger that updates `heroState.scroll`. Keep the parent `.hero__copy` scroll animation. Keep global Lenis and pointer listeners. Do not install a second smooth-scroll controller in production.
+7. Remove/unmount the previous FV Canvas. Do not run two renderers. Leave Three.js/GSAP uses in all other sections unchanged.
+8. The parent hero remains `position:relative`; the supplied `.hero3d` wrapper fills it. CSS only targets `.mannequin-*`. Assets support an explicit base path.
 
-5. Remove/unmount the old FV Canvas/Three.js scene. Do not leave a hidden second renderer running. Retain Three.js/GSAP dependencies used by other sections. Keep unrelated scroll/animation logic intact.
+If `getScroll` is omitted, the renderer derives progress from the hero's bounding rectangle. If `getPointer` is omitted it reads window pointer events. The standalone preview adds empty scroll space because it contains no following sections; the real site already provides scroll distance.
 
-6. The existing `.hero` needs `position:relative` (already true in the reference page). The new component creates an absolute full-hero wrapper. All shipped CSS selectors begin with `.mannequin-`; do not apply them globally to `canvas`, `img`, `.hero`, body or other site elements.
-
-## Plain HTML fallback (only if the project is not React)
+## Plain HTML alternative
 
 ```html
 <link rel="stylesheet" href="/mannequin/hero.css">
-<!-- Inside existing .hero, replacing only the old mannequin renderer: -->
 <div id="mannequin-fv" style="position:absolute;inset:0" aria-hidden="true"></div>
 <script type="module">
-  import { mountMannequin } from '/mannequin/mannequin.js';
+  import {mountMannequin} from '/mannequin/mannequin.js';
   const dispose = mountMannequin(document.getElementById('mannequin-fv'));
-  // Call dispose() when the containing view unmounts.
+  // Call dispose on view teardown. Keep existing page scrolling.
 </script>
 ```
 
-## Required verification
+## Verify before finishing
 
-- Run the project's normal build/typecheck.
-- Check desktop (~1440px) and mobile (~390px): model is visible, not stretched, no horizontal overflow; copy/CTAs remain legible and clickable.
-- Check all model assets return HTTP 200 and there are no browser errors.
-- Hover/move the pointer over the hero on desktop; after the 9 views load, the mannequin turns subtly. The static image remains visible if optional views cannot load.
-- Confirm reduced-motion/coarse-pointer/save-data settings do not start the turn effect.
-- Confirm old FV renderer is unmounted and only one mannequin is visible.
-- Review git diff: changes must be confined to the mannequin integration and added assets. Do not modify unrelated parts of the page.
-- This package author did not deploy to the client URL. Do not claim a production deployment unless you actually deploy through the user's existing authorized workflow.
+- Run the target build/typecheck. For this source package: `npm ci && npm run build && npm test`.
+- Desktop: without input the model turns slowly. Move the pointer: pitch/roll/camera follow. Wheel down: perspective zooms while the model keeps rotating and ribbon expands outward/upward. Wheel up restores camera distance and ribbon shape. Page scrolling must work normally.
+- Mobile: compare the source's portrait placement; scroll to see the model. Do not rewrite the source mobile layout just to fit the full stand in the initial viewport.
+- No horizontal overflow; copy and CTAs remain usable; no shader/network errors.
+- Check reduced motion, offscreen suspension, unmount/remount and fallback on failed model loading. No duplicate model/Canvas.
+- All GLB, WebP, normal-map and Draco URLs return 200; .wasm MIME is application/wasm.
+- Changes outside mannequin integration/assets must not enter the client patch.
 
-## Source / licenses
+## Rebuild Blender transfer
 
-The dress form, ribbon, stand and sewing geometry were created for this task in Blender 5.2. The final `.blend` has textures packed inside. PBR material scans are CC0 from Poly Haven: https://polyhaven.com/a/hessian_380 , https://polyhaven.com/a/american_walnut_veneer , https://polyhaven.com/a/crepe_satin . License: https://polyhaven.com/license . Runtime files are local and require no third-party account.
+`blender/doclasse-cycles-final.blend` is the unchanged approved master with packed textures. Run `blender --background --python tools/export_interactive.py` to bake and export the interactive asset. This takes CPU time. Blender 5.2 was used. `tools/render_from_master.py` recreates the still render. `ASSET_MANIFEST.json` records the shipped files and SHA-256 hashes.

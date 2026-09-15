@@ -1,0 +1,12 @@
+import * as THREE from 'three';
+/** The deployed FV's 36 dust particles and vertex motion, with the same parameters. */
+export function createSparkles(pixelRatio) {
+  const geometry=new THREE.BufferGeometry(),count=36;
+  const positions=Float32Array.from(Array.from({length:count},()=>[3.2,3.2,2.4].map(THREE.MathUtils.randFloatSpread)).flat());
+  geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  for(const [name,value] of [['size',2.2],['speed',.25],['opacity',.55]])geometry.setAttribute(name,new THREE.BufferAttribute(new Float32Array(count).fill(value),1));
+  geometry.setAttribute('noise',new THREE.BufferAttribute(new Float32Array(count*3).fill(1),3));
+  const color=new THREE.Color('#c9a36a');geometry.setAttribute('color',new THREE.BufferAttribute(Float32Array.from(Array.from({length:count},()=>color.toArray()).flat()),3));
+  const material=new THREE.ShaderMaterial({uniforms:{time:{value:0},pixelRatio:{value:pixelRatio}},transparent:true,depthWrite:false,vertexShader:"\n        uniform float pixelRatio;\n        uniform float time;\n        attribute float size;  \n        attribute float speed;  \n        attribute float opacity;\n        attribute vec3 noise;\n        attribute vec3 color;\n        varying vec3 vColor;\n        varying float vOpacity;\n\n        void main() {\n          vec4 modelPosition = modelMatrix * vec4(position, 1.0);\n          modelPosition.y += sin(time * speed + modelPosition.x * noise.x * 100.0) * 0.2;\n          modelPosition.z += cos(time * speed + modelPosition.x * noise.y * 100.0) * 0.2;\n          modelPosition.x += cos(time * speed + modelPosition.x * noise.z * 100.0) * 0.2;\n          vec4 viewPosition = viewMatrix * modelPosition;\n          vec4 projectionPostion = projectionMatrix * viewPosition;\n          gl_Position = projectionPostion;\n          gl_PointSize = size * 25. * pixelRatio;\n          gl_PointSize *= (1.0 / - viewPosition.z);\n          vColor = color;\n          vOpacity = opacity;\n        }\n      ",fragmentShader:"\n        varying vec3 vColor;\n        varying float vOpacity;\n        void main() {\n          float distanceToCenter = distance(gl_PointCoord, vec2(0.5));\n          float strength = 0.05 / distanceToCenter - 0.1;\n          gl_FragColor = vec4(vColor, strength * vOpacity);\n          #include <tonemapping_fragment>\n          #include <colorspace_fragment>\n        }\n      "});
+  return new THREE.Points(geometry,material);
+}

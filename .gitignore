@@ -13,3 +13,8 @@ src/mannequin-webgl.js
 tools/*
 !tools/serve.mjs
 !tools/render_from_master.py
+!tools/package_delivery.py
+!tools/export_interactive.py
+renders/
+public/motion-qa.html
+public/mannequin/*.tmp.mp4

@@ -1,7 +1,8 @@
-/* Scoped to the replacement illustration. Existing FV copy, layout and colors stay owned by the site. */
-.mannequin-stage { position:absolute; top:85px; right:3%; bottom:-8px; width:48%; pointer-events:none; }
-.mannequin-cycles,.mannequin-view { position:absolute; inset:0 auto 0 50%; display:block; width:auto; max-width:100%; height:100%; object-fit:contain; transform:translateX(-50%); mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent); -webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent); }
-@media(max-width:760px) {
-  .mannequin-stage { top:350px; bottom:48px; right:-8%; width:76%; }
-}
-@media(prefers-reduced-motion:reduce) { .mannequin-view { display:none; } }
+/* Scoped to the replacement; the original hero owns its layout and scroll. */
+.mannequin-stage { position:absolute; inset:0; pointer-events:none; }
+.mannequin-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; }
+.mannequin-fallback-layout { position:absolute; top:85px; right:3%; bottom:-8px; width:48%; }
+.mannequin-cycles { position:absolute; inset:0 auto 0 50%; display:block; width:auto; max-width:100%; height:100%; object-fit:contain; transform:translateX(-50%); mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent); -webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent); }
+.mannequin-stage[data-state="ready"] .mannequin-canvas { opacity:1; }
+.mannequin-stage[data-state="ready"] .mannequin-fallback-layout { visibility:hidden; }
+@media(max-width:760px) { .mannequin-fallback-layout { top:350px; bottom:48px; right:-8%; width:76%; } }
