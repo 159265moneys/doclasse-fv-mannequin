@@ -1,0 +1,15 @@
+{
+  "name": "doclasse-mannequin-fv",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.mjs",
+    "build": "vite build",
+    "render": "blender --background --python tools/render_from_master.py"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

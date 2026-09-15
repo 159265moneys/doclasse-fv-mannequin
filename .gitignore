@@ -1,0 +1,15 @@
+node_modules/
+.DS_Store
+*.blend1
+reference/
+deliverable/
+*.zip
+public/models/
+public/mannequin/*.png
+public/mannequin/views/*.png
+blender/*
+!blender/doclasse-cycles-final.blend
+src/mannequin-webgl.js
+tools/*
+!tools/serve.mjs
+!tools/render_from_master.py
