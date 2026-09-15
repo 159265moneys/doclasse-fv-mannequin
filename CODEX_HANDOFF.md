@@ -1,5 +1,11 @@
 # TASK: Replace ONLY the DoCLASSE FV mannequin
 
+## Published preview
+
+- Demo: https://159265moneys.github.io/doclasse-fv-mannequin/
+- Public repository: https://github.com/159265moneys/doclasse-fv-mannequin
+- ZIP: https://github.com/159265moneys/doclasse-fv-mannequin/releases/latest/download/doclasse-fv-mannequin.zip
+
 ## User-approved scope
 
 The user approved the visual direction in this package. Integrate the supplied Blender/Cycles mannequin into the existing DoCLASSE recruitment landing page. The reference deployment is https://915hirata.pages.dev/ . This ZIP is a component/asset patch, NOT a replacement website.
