@@ -1,5 +1,5 @@
 import Lenis from './lenis.mjs';
-import {mountMannequin} from '../mannequin/mannequin.js';
+import {mountMannequin} from '../mannequin/mannequin.js?v=1.1.0';
 const hero=document.querySelector('.hero');
 const copy=hero.querySelector('.hero__copy');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
